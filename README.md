@@ -11,6 +11,7 @@ Preview : https://youtu.be/e4ECV8iKzlA
 - Different items per location
 - Availability to show / hide blip
 - Option to show / hide not owned items that can be sold
+- Configurable option to enable melting at the location
 
 # License
 
