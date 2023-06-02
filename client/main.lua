@@ -39,6 +39,10 @@ CreateThread(function()
             SetEntityInvincible(ped, true)
             SetBlockingOfNonTemporaryEvents(ped, true)
             TaskPlayAnim(ped,"mini@strip_club@idles@bouncer@base","base", 8.0, 0.0, -1, 1, 0, 0, 0, 0)
+            local shopitems = {}
+            QBCore.Functions.TriggerCallback('qb-pawnshop:server:getItems', function(items)
+                shopitems = items
+            end, key)
 
             exports['qb-target']:AddBoxZone('PawnShop'..key, value.coords, value.length, value.width, {
                 name = 'PawnShop'..key,
@@ -53,7 +57,8 @@ CreateThread(function()
                         event = 'qb-pawnshop:client:openMenu',
                         icon = 'fas fa-ring',
                         label = 'Pawn Shop',
-                        shopitems = value.items,
+                        shop = key,
+                        shopitems = shopitems,
                         meltingenabled = value.enablemelting
                     },
                 },
@@ -68,7 +73,7 @@ CreateThread(function()
                 heading = value.heading,
                 minZ = value.coords.z - 2,
                 maxZ = value.coords.z + 2,
-                data = {shopitems = value.items, meltingenabled = value.enablemelting}
+                data = {shop = key, shopitems = shopitems, meltingenabled = value.enablemelting}
             })
         end
         local pawnShopCombo = ComboZone:Create( zone, { name = 'NewPawnShopCombo', debugPoly = false })
@@ -80,7 +85,7 @@ CreateThread(function()
                         txt = Lang:t('info.open_pawn'),
                         params = {
                             event = 'qb-pawnshop:client:openMenu',
-                            args = {shopitems = zonedata.data.shopitems, meltingenabled = zonedata.data.meltingenabled}
+                            args = {shop = zonedata.data.shop, shopitems = zonedata.data.shopitems, meltingenabled = zonedata.data.meltingenabled}
                         },
                     }
                 })
@@ -93,6 +98,7 @@ end)
 
 RegisterNetEvent('qb-pawnshop:client:openMenu', function(data)
     local shopitems = data.shopitems
+    local shop = data.shop
     if Config.UseTimes then
         if GetClockHours() >= Config.TimeOpen and GetClockHours() <= Config.TimeClosed then
             local pawnShop = {
@@ -106,7 +112,8 @@ RegisterNetEvent('qb-pawnshop:client:openMenu', function(data)
                     params = {
                         event = 'qb-pawnshop:client:openPawn',
                         args = {
-                            items = shopitems
+                            items = shopitems,
+                            shop = shop
                         }
                     }
                 }
@@ -155,7 +162,8 @@ RegisterNetEvent('qb-pawnshop:client:openMenu', function(data)
                     event = 'qb-pawnshop:client:openPawn',
                     args = {
                         items = shopitems,
-                        enablemelting = data.meltingenabled
+                        enablemelting = data.meltingenabled,
+                        shop = shop
                     }
                 }
             }
@@ -193,6 +201,7 @@ end)
 
 RegisterNetEvent('qb-pawnshop:client:openPawn', function(data)
     local shopitems = data.items
+    local shop = data.shop
     local pawnMenu = {
         {
             header = Lang:t('info.title'),
@@ -212,6 +221,7 @@ RegisterNetEvent('qb-pawnshop:client:openPawn', function(data)
                         label = QBCore.Shared.Items[v.item].label,
                         price = v.price,
                         name = v.item,
+                        shop = shop
                     }
                 }
             }
@@ -295,7 +305,7 @@ RegisterNetEvent('qb-pawnshop:client:pawnitems', function(data)
                 return
             end
             if tonumber(sellingItem.amount) > 0 and tonumber(sellingItem.amount) <= amount then
-                TriggerServerEvent('qb-pawnshop:server:sellPawnItems', data.name, sellingItem.amount, data.price)
+                TriggerServerEvent('qb-pawnshop:server:sellPawnItems', data.name, sellingItem.amount, data.shop)
             else
                 QBCore.Functions.Notify(Lang:t('error.negative'), 'error')
             end

@@ -1,4 +1,5 @@
 local QBCore = exports['qb-core']:GetCoreObject()
+local prices = {}
 
 local function exploitBan(id, reason)
     MySQL.insert('INSERT INTO bans (name, license, discord, ip, reason, expire, bannedby) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -16,9 +17,42 @@ local function exploitBan(id, reason)
     DropPlayer(id, 'You were permanently banned by the server for: Exploiting')
 end
 
-RegisterNetEvent('qb-pawnshop:server:sellPawnItems', function(itemName, itemAmount, itemPrice)
+local function UpdatePrices()
+    prices = {}
+    for k, v in pairs(Config.PawnLocation) do
+        for a, d in pairs(v.items) do
+            prices[#prices+1] = {shop = k, item = d.item, price = d.price}
+        end
+    end
+end
+
+local function GetItemsFromShop(shop)
+    if not shop then return end
+    local shopitems = {}
+    for _,v in pairs(prices) do
+        if v.shop == shop then
+            shopitems[#shopitems+1] = {item = v.item, price = v.price}
+        end
+    end
+    return shopitems
+end
+
+local function GetPriceFromItem(item, shop)
+    if not item or not shop then return end
+    local shopitems = GetItemsFromShop(shop)
+    for _,v in pairs(shopitems) do
+        if v.item == item then
+            price = v.price
+        end
+    end
+    return price
+end
+
+RegisterNetEvent('qb-pawnshop:server:sellPawnItems', function(itemName, itemAmount, shop)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
+    local itemPrice = GetPriceFromItem(itemName, shop)
+    if not itemPrice or itemPrice == 0 then exploitBan(src, 'sellPawnItems Exploiting') return end
     local totalPrice = (tonumber(itemAmount) * itemPrice)
     local playerCoords = GetEntityCoords(GetPlayerPed(src))
     local dist
@@ -100,4 +134,14 @@ QBCore.Functions.CreateCallback('qb-pawnshop:server:ItemAmount', function(source
         end
     end
     return cb(amount)
+end)
+
+QBCore.Functions.CreateCallback('qb-pawnshop:server:getItems', function(_, cb, shop)
+    if not shop then return end
+    local items = GetItemsFromShop(shop)
+    cb(items)
+end)
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource == GetCurrentResourceName() then UpdatePrices() end
 end)
