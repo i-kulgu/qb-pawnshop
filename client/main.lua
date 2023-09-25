@@ -33,16 +33,18 @@ CreateThread(function()
             while not HasAnimDictLoaded("mini@strip_club@idles@bouncer@base") do
                 Wait(1)
             end
-            ped =  CreatePed(4, model,value.coords.x,value.coords.y,value.coords.z - 1.0, value.heading, false, true)
-            SetEntityHeading(ped, value.heading)
-            FreezeEntityPosition(ped, true)
-            SetEntityInvincible(ped, true)
-            SetBlockingOfNonTemporaryEvents(ped, true)
-            TaskPlayAnim(ped,"mini@strip_club@idles@bouncer@base","base", 8.0, 0.0, -1, 1, 0, 0, 0, 0)
+            local Ped = CreatePed(4, model,value.coords.x,value.coords.y,value.coords.z - 1.0, value.heading, false, true)
+            SetEntityHeading(Ped, value.heading)
+            FreezeEntityPosition(Ped, true)
+            SetEntityInvincible(Ped, true)
+            SetBlockingOfNonTemporaryEvents(Ped, true)
+            TaskPlayAnim(Ped,"mini@strip_club@idles@bouncer@base","base", 8.0, 0.0, -1, 1, 0, 0, 0, 0)
+                
             local shopitems = {}
             QBCore.Functions.TriggerCallback('qb-pawnshop:server:getItems', function(items)
                 shopitems = items
             end, key)
+            Wait(100)
 
             exports['qb-target']:AddBoxZone('PawnShop'..key, value.coords, value.length, value.width, {
                 name = 'PawnShop'..key,
